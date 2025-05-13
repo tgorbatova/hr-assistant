@@ -31,7 +31,6 @@ def upgrade() -> None:
         sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, index=True, unique=True),
         sa.Column('name', sa.Text(), index=True, nullable=False),
         sa.Column('file_name', sa.Text(), nullable=False),
-        sa.Column('folder_name', sa.Text(), nullable=True),
         sa.Column('size', sa.Integer(), nullable=False),
         sa.Column('path', sa.Text(), nullable=False, unique=True),
         sa.Index('idx_files_id_hash', 'id', postgresql_using='hash'),
