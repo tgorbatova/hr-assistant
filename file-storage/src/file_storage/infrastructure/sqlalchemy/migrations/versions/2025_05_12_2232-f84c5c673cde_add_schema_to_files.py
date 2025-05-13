@@ -15,7 +15,7 @@ from file_storage.main.config import DB_SCHEMA  # noqa: F401
 
 # revision identifiers, used by Alembic.
 revision: str = "f84c5c673cde"
-down_revision: Union[str, None] = "4b6641fe6104"
+down_revision: Union[str, None] = "199c22bc09c3"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
