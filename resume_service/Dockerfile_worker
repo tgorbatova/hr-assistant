@@ -1,0 +1,29 @@
+FROM python:3.12.5-slim
+
+WORKDIR /app
+
+COPY ./uv.lock /app
+COPY ./pyproject.toml /app
+
+RUN pip install uv
+RUN python -m uv sync --group app
+
+COPY ./entrypoint_worker.sh /app/entrypoint_worker.sh
+RUN chmod +x /app/entrypoint_worker.sh
+
+# Install both antiword and unrtf
+RUN apt-get update && \
+    apt-get install -y antiword unrtf && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY ./src /app/src
+COPY ./docker.yaml /app/docker.yaml
+
+ENV PYTHONPATH=/app/src
+ENV ENV_TYPE=docker
+ENV TOKENIZERS_PARALLELISM=false
+ENV CUDA_DEVICE_ORDER=PCI_BUS_ID
+ENV CUDA_VISIBLE_DEVICES=0
+ENV TZ=Europe/Moscow
+
+ENTRYPOINT ["/app/entrypoint_worker.sh"]

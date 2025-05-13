@@ -1,0 +1,45 @@
+services:
+  resume-service:
+    build:
+      context: .
+      dockerfile: Dockerfile_service
+    restart: unless-stopped
+    ports:
+      - "4998:5000"
+    depends_on:
+      - redis-resume-service
+    networks:
+      - shared-net
+
+
+  worker-resume-service:
+    build:
+      context: .
+      dockerfile: Dockerfile_worker
+    restart: unless-stopped
+    depends_on:
+      - resume-service
+    networks:
+      - shared-net
+
+
+  redis-resume-service:
+    image: redis:7
+    restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "6360:6379"
+    volumes:
+      - resume-service-redis-data:/data
+      - ./.data/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - shared-net
+
+volumes:
+  resume-service-redis-data:
+    name: resume-service-redis-data
+
+networks:
+  shared-net:
+    external: true
+    name: hr-shared-net

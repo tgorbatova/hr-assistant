@@ -1,0 +1,20 @@
+app:
+  staticfiles_directory: /app/src/static
+  templates_directory: /app/src/templates
+
+api:
+  host: localhost
+  port: 5008
+  num_workers: 4
+
+infra:
+  client:
+    files:
+      base_url: http://file-storage:5030
+      domain: /files
+
+  nats:
+    dsn: nats://nats:4222
+
+logging:
+  json_logging: false

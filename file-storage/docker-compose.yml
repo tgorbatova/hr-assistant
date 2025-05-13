@@ -1,0 +1,57 @@
+services:
+  file-storage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5030:5030"
+    environment:
+      - PYTHONPATH=/app/src
+      - ENV_TYPE=docker
+      - TZ=Europe/Moscow
+    depends_on:
+      - redis-file-storage
+    networks:
+      - shared-net
+
+  redis-file-storage:
+    image: redis:7
+    restart: always
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "6350:6379"
+    volumes:
+      - hr-redis-data-file-storage:/data
+      - hr-redis-conf-file-storage:/usr/local/etc/redis/redis.conf
+    networks:
+      - shared-net
+
+  postgres-file-storage:
+    image: postgres:16-bullseye
+    command: [ "postgres", "-c", "log_statement=all" ]
+    restart: always
+    volumes:
+      - pgdata-file-storage:/pgdata/file_storage
+    environment:
+      - PGDATA=/pgdata/file_storage
+      - POSTGRES_DB=file_storage
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5420:5432"
+    networks:
+      - shared-net
+
+
+volumes:
+  hr-redis-data-file-storage:
+    name: hr-redis-data-file-storage
+  hr-redis-conf-file-storage:
+    name: hr-redis-conf-file-storage
+  pgdata-file-storage:
+    name: pgdata-file-storage
+
+networks:
+  shared-net:
+    external: true
+    name: hr-shared-net

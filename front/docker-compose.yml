@@ -1,0 +1,38 @@
+services:
+  front:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:5000"
+    environment:
+      - PYTHONPATH=/app/src
+      - ENV_TYPE=docker
+      - TZ=Europe/Moscow
+    depends_on:
+      - redis-front
+    networks:
+      - shared-net
+
+  redis-front:
+    image: redis:7
+    restart: always
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "6300:6379"
+    volumes:
+      - hr-redis-data-front:/data
+      - hr-redis-conf-front:/usr/local/etc/redis/redis.conf
+    networks:
+      - shared-net
+
+volumes:
+  hr-redis-data-front:
+    name: hr-redis-data-front
+  hr-redis-conf-front:
+    name: hr-redis-conf-front
+
+networks:
+  shared-net:
+    external: true
+    name: hr-shared-net

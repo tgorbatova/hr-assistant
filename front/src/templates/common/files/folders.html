@@ -1,0 +1,101 @@
+{% for folder in folders %}
+<div class="folder">
+  <h3 class="folder-name">
+    <a href="/folders/{{ folder }}" class="folder-link">{{ folder }}</a>
+  </h3>
+  <div class="actions">
+    <button onclick="uploadTo('{{ folder }}')" class="action-btn upload-btn" title="Upload">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>
+    <button hx-delete="http://localhost:5030/files/delete/folder/{{ folder }}" 
+            hx-target="#folder-list" 
+            hx-swap="none"
+            onclick="this.addEventListener('htmx:afterRequest', function(evt) { 
+                if (evt.detail.successful) { 
+                    console.log('Delete successful, reloading...');
+                    window.location.reload(); 
+                }
+            });"
+            class="action-btn delete-btn" 
+            title="Delete">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+        <line x1="10" y1="11" x2="10" y2="17"/>
+        <line x1="14" y1="11" x2="14" y2="17"/>
+      </svg>
+    </button>
+  </div>
+</div>
+{% endfor %}
+
+<style>
+.folder {
+  background-color: var(--bg-darker);
+  margin-bottom: 0.75rem;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.folder:hover {
+  transform: translateX(5px);
+}
+
+.folder-name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.folder-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.folder-link:hover {
+  color: var(--text-primary);
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent !important;
+}
+
+.upload-btn {
+  color: var(--accent-color);
+}
+
+.upload-btn:hover {
+  color: var(--accent-hover);
+}
+
+.delete-btn {
+  color: #dc2626;
+}
+
+.delete-btn:hover {
+  color: #b91c1c;
+}
+</style>
+

@@ -1,0 +1,17 @@
+logging:
+  json_logging: false
+
+infra:
+  postgres:
+    database_url: postgresql+asyncpg://postgres:postgres@postgres-file-storage:5432/file_storage
+    schema: files_schema
+  object_store:
+    url: http://minio:9000
+    access_key: ROOTNAME
+    secret_key: ROOTPASSWORD
+  nats:
+    dsn: nats://nats:4222
+api:
+  num_workers: 1
+  port: 5030
+  host: 0.0.0.0

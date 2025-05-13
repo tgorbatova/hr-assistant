@@ -1,0 +1,25 @@
+from pathlib import Path
+from typing import Any, TypeVar
+
+import yaml
+
+T = TypeVar("T", bound=dict[str, Any])
+
+
+def _upper_keys(dict_to_upper: T) -> T:  # noqa: UP047
+    for key, value in dict_to_upper.copy().items():
+        if isinstance(value, dict):
+            _upper_keys(value)
+        elif isinstance(value, list):
+            for list_item in value:
+                if isinstance(list_item, dict):
+                    _upper_keys(list_item)
+        dict_to_upper[key.upper()] = dict_to_upper.pop(key)
+
+    return dict_to_upper
+
+
+def load_yaml_config(config_path: str) -> dict[str, Any]:
+    """Load yaml config."""
+    with Path.open(Path(config_path)) as file:
+        return _upper_keys(yaml.safe_load(file))

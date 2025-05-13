@@ -1,0 +1,22 @@
+FROM python:3.12.5-slim
+
+WORKDIR /app
+
+COPY ./uv.lock /app
+COPY ./pyproject.toml /app
+
+RUN pip install uv
+RUN python -m uv sync --group backend
+
+COPY ./entrypoint_service.sh /app/entrypoint_service.sh
+
+RUN chmod 544 /app/entrypoint_service.sh
+
+COPY ./docker.yaml /app/docker.yaml
+COPY ./src /app/src
+
+ENV PYTHONPATH=/app/src
+ENV ENV_TYPE=docker
+ENV TZ=Europe/Moscow
+
+CMD /app/entrypoint_service.sh

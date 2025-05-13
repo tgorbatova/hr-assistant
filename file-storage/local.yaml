@@ -1,0 +1,17 @@
+logging:
+  json_logging: false
+
+infra:
+  postgres:
+    database_url: postgresql+asyncpg://postgres:postgres@localhost:5420/file_storage
+    schema: files_schema
+  object_store:
+    url: http://localhost:9000
+    access_key: ROOTNAME
+    secret_key: ROOTPASSWORD
+  nats:
+    dsn: nats://localhost:4223
+api:
+  num_workers: 1
+  port: 5000
+  host: 0.0.0.0

@@ -1,0 +1,44 @@
+services:
+  nats:
+    image: nats:2.10
+    restart: always
+    ports:
+      - "4223:4222"
+    command: -js
+    volumes:
+      - nats-data:/data
+    networks:
+      - shared-net
+
+  nats-ui:
+    image: ghcr.io/nats-nui/nui:latest
+    restart: always
+    ports:
+      - "31311:31311"
+    volumes:
+      - nats-data:/db
+    networks:
+      - shared-net
+
+  minio:
+    image: quay.io/minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ROOTNAME
+      MINIO_ROOT_PASSWORD: ROOTPASSWORD
+    volumes:
+      - ~/minio/data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - shared-net
+
+volumes:
+  nats-data:
+    name: nats-data
+
+networks:
+  shared-net:
+    external: true
+    name: hr-shared-net

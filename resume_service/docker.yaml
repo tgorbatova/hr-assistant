@@ -1,0 +1,14 @@
+server:
+  host: localhost
+  port: 4998
+  num_workers: 1
+
+infra:
+  redis:
+    dsn: redis://@redis-resume-service:6379/0
+  nats:
+    dsn: nats://nats:4222
+  client:
+    files:
+      base_url: http://file-storage:5030
+      domain: /files
