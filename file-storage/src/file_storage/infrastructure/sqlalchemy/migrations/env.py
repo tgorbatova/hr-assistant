@@ -32,8 +32,6 @@ target_metadata = Base.metadata
 
 _autogenerate_models = (
     Files,
-    Folders,
-    Results,
 )
 
 

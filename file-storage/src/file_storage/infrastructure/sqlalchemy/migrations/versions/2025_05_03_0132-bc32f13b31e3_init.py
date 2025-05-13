@@ -34,6 +34,10 @@ def upgrade() -> None:
         sa.Column('folder_name', sa.Text(), nullable=True),
         sa.Column('size', sa.Integer(), nullable=False),
         sa.Column('path', sa.Text(), nullable=False, unique=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text("TIMEZONE('Europe/Moscow', now())"),
+                  nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text("TIMEZONE('Europe/Moscow', now())"),
+                  nullable=False),
         sa.Index('idx_files_id_hash', 'id', postgresql_using='hash'),
         sa.UniqueConstraint('name', 'folder_name', name='uq_files_name_folder'),
         schema='files_schema'
