@@ -1,6 +1,6 @@
 import os
 
-from pydantic import BaseModel, NatsDsn, RedisDsn, HttpUrl
+from pydantic import BaseModel, HttpUrl, NatsDsn, RedisDsn
 
 from resume_service.utils.load_yaml_config import load_yaml_config
 
@@ -24,12 +24,20 @@ class NatsSettings(BaseModel):
     DSN: NatsDsn
     BUCKET: Buckets = Buckets()
 
+
+class LLMSettings(BaseModel):
+    URL: str
+    TOKEN: str
+    MODEL: str
+
+
 class ClientSettings(BaseModel):
     class ServiceCfg(BaseModel):
         BASE_URL: HttpUrl
         DOMAIN: str
 
     FILES: ServiceCfg | None = None
+    LLM: LLMSettings
 
 
 class InfrastructureSettings(BaseModel):

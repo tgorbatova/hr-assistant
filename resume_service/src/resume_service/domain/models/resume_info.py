@@ -1,4 +1,3 @@
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -20,9 +19,9 @@ class EducationInfo(BaseModel):
 
 
 class ContactInfo(BaseModel):
-    phone: list[str]
-    email: list[str]
-    other: list[str]
+    phone: list[str] | None = None
+    email: list[str] | None = None
+    other: list[str] | None = None
 
 
 class PersonalInfo(BaseModel):
@@ -40,4 +39,4 @@ class ResumeInfo(BaseModel):
     education: list[EducationInfo]
     courses: list[str] | None = None
     languages: list[str] | None = None
-    other: Any
+    other: dict | None = None

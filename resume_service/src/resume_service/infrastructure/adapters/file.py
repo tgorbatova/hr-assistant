@@ -48,7 +48,7 @@ class FilesRepository:
             file_name=file_info["metadata"]["file_name"],
             path=file_info["metadata"]["path"],
             file=file,
-            content_type= "application/octet-stream"
+            content_type="application/octet-stream",
         )
         _logger.info("Returning file info, file_id=%s", file_id)
         return result

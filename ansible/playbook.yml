@@ -1,0 +1,56 @@
+- tags:
+    - start
+  hosts: 127.0.0.1
+  vars_files:
+    - ./vars/config.yml
+  vars:
+    dist_path: "./hr"
+  tasks:
+    - name: Create dist folder
+      file:
+        path: "{{ dist_path }}"
+        state: directory
+
+    - name: Create nginx folder
+      file:
+        path: "{{ dist_path }}/nginx/{{ item }}"
+        state: directory
+      with_items:
+        - configs
+        - configs/common.d
+        - configs/html
+
+    - name: Copy nginx static common files
+      copy:
+        src: ./static/nginx/common.d
+        dest: "{{ dist_path }}/nginx/configs/"
+
+    - name: Copy nginx static conf.d files
+      copy:
+        src: ./static/nginx/conf.d
+        dest: "{{ dist_path }}/nginx/configs/"
+
+    - name: Generate master Docker Compose from template
+      template:
+        src: templates/docker-compose.yml.j2
+        dest: "{{ dist_path }}/docker-compose.yml"
+
+    - name: Generate nginx.conf from template
+      template:
+        src: templates/nginx.conf.j2
+        dest: ./{{ dist_path }}/nginx/configs/nginx.conf
+
+    - name: Build base image (poetry builder)
+      command: docker build -t poetry-builder -f Dockerfile .
+
+    - name: Run microservices Docker Compose
+      command: "docker-compose -f {{ dist_path }}/docker-compose.yml up -d --build"
+
+- tags:
+    - stop
+  hosts: 127.0.0.1
+  vars:
+    dist_path: "./hr"
+  tasks:
+    - name: Stop docker-compose
+      command: docker-compose -f {{ dist_path }}/docker-compose.yml down

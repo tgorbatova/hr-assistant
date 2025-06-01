@@ -10,5 +10,10 @@ infra:
     dsn: nats://nats:4222
   client:
     files:
-      base_url: http://file-storage:5030
+      base_url: http://nginx
       domain: /files
+
+    llm:
+      url: http://81.94.156.111:8000/v1
+      token: api
+      model: google/gemma-3-27b-it

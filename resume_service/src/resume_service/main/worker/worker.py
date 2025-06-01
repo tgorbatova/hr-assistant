@@ -1,9 +1,9 @@
 import structlog
 from dishka import make_async_container
 from dishka.integrations.taskiq import TaskiqProvider, setup_dishka
+from faststream.nats import NatsBroker
 from taskiq import AsyncBroker, TaskiqEvents, TaskiqState
 from taskiq_redis import RedisAsyncResultBackend
-from faststream.nats import NatsBroker
 
 from resume_service.di.factory import base_providers
 from resume_service.di.providers.task_broker import TaskBrokerContextProvider

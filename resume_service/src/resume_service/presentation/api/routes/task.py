@@ -5,11 +5,9 @@ from typing import Annotated
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, HTTPException, Query, UploadFile, status
 
 from resume_service.infrastructure.adapters.task import TaskAdapter
-from fastapi import Query
-
 from resume_service.presentation.api.models.create import CreateTaskQuery
 
 router = APIRouter(prefix="/converter", tags=["converter"])
@@ -18,9 +16,7 @@ router = APIRouter(prefix="/converter", tags=["converter"])
 @router.post("/tasks", status_code=status.HTTP_202_ACCEPTED)
 @inject
 async def create_task(
-    file: UploadFile,
-    task_service: FromDishka[TaskAdapter],
-    queries: Annotated[CreateTaskQuery, Query(...)]
+    file: UploadFile, task_service: FromDishka[TaskAdapter], queries: Annotated[CreateTaskQuery, Query(...)]
 ) -> str:
     """Создание задачи."""
     file_content = await file.read()
@@ -28,7 +24,7 @@ async def create_task(
         "filename": file.filename,
         "content": base64.b64encode(file_content).decode("ascii"),  # Convert bytes to base64 string
         "content_type": file.content_type,
-        "file_id": queries.file_id
+        "file_id": queries.file_id,
     }
 
     await file.seek(0)

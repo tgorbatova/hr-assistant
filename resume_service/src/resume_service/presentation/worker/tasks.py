@@ -7,7 +7,7 @@ from dishka.integrations.taskiq import inject
 from taskiq import AsyncBroker, Context, TaskiqDepends
 
 from resume_service.app.interfaces.inference import Inference
-from resume_service.domain.models.message import ConvertedMsgSchema
+from resume_service.domain.models.resume_info import ResumeInfo
 
 _logger: structlog.stdlib.BoundLogger = structlog.get_logger("tasks")
 
@@ -17,7 +17,7 @@ async def task(
     ctx: Annotated[Context, TaskiqDepends()],
     payload: dict,
     inference: FromDishka[Inference],
-) -> str:
+) -> ResumeInfo:
     """Convert input file to plain text."""
     _logger.debug("Preparing task %s execution", ctx.message.task_id)
 

@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile_service
     restart: unless-stopped
-    ports:
-      - "4998:5000"
+#    ports:
+#      - "4998:5000"
     depends_on:
       - redis-resume-service
     networks:

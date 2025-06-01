@@ -1,9 +1,9 @@
 from typing import Protocol
 
-from resume_service.domain.models.message import ConvertedMsgSchema
+from resume_service.domain.models.resume_info import ResumeInfo
 
 
 class Inference(Protocol):
-    async def inference(self, file_data: dict) -> str:
+    async def inference(self, file_data: dict) -> ResumeInfo:
         """Инференс конвертирования."""
         ...

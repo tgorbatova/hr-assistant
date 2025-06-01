@@ -49,12 +49,10 @@ class BaseHttpClient:
             content_type = response.headers.get("Content-Type", "")
             if "application/json" in content_type:
                 return await response.json()
-            elif "text" in content_type:
+            if "text" in content_type:
                 return await response.text()
-            else:
-                # Assume it's a file or binary stream
-                return await response.read()
-
+            # Assume it's a file or binary stream
+            return await response.read()
 
     async def get(self, endpoint: str, **kwargs) -> Any:
         return await self._request("GET", endpoint, **kwargs)

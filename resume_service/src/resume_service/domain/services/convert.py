@@ -8,7 +8,6 @@ from docx import Document
 from PyPDF2 import PdfReader
 
 from resume_service.domain.exceptions.convert import UnsupportedTypeError
-from resume_service.domain.models.message import ConvertedMsgSchema
 from resume_service.main.config import Settings
 
 _logger: structlog.stdlib.BoundLogger = structlog.get_logger("inference.converter")
