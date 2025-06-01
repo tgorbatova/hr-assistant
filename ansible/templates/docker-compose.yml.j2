@@ -1,0 +1,76 @@
+include:
+{% for service in services|dict2items %}
+  - path: {{ service.value.service_path }}/{{ service.value.compose_name }}
+    project_directory: {{ service.value.service_path }}
+{% endfor %}
+
+services:
+  nginx:
+    image: uozi/nginx-ui:latest
+    container_name: hr-nginx
+    stdin_open: true
+    tty: true
+    restart: always
+    environment:
+      - TZ=Europe/Moscow
+    volumes:
+      - ./nginx/configs/html:/etc/nginx/html
+      - ./nginx/configs/common.d:/etc/nginx/common.d
+      - ./nginx/configs/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/configs/conf.d:/etc/nginx/conf.d
+      - /var/log/nginx:/var/log/nginx
+    ports:
+      - "80:80"
+      - "5000:9000"
+    depends_on:
+{% for service in services|dict2items %}
+{% if service.value.nginx_depends %}
+      - {{ service.key }}
+{% endif %}
+{% endfor %}
+    networks:
+      - shared-net
+
+  nats:
+    image: nats:2.10
+    restart: always
+    ports:
+      - "4223:4222"
+    command: -js
+    volumes:
+      - nats-data:/data
+    networks:
+      - shared-net
+
+  nats-ui:
+    image: ghcr.io/nats-nui/nui:latest
+    restart: always
+    ports:
+      - "31311:31311"
+    volumes:
+      - nats-data:/db
+    networks:
+      - shared-net
+
+  minio:
+    image: quay.io/minio/minio
+    ports:
+      - "9090:9090"  # Serve API on 9001
+      - "9091:9091"  # Serve Console on 9002 (optional)
+    environment:
+      MINIO_ROOT_USER: ROOTNAME
+      MINIO_ROOT_PASSWORD: ROOTPASSWORD
+    volumes:
+      - ~/minio/data:/data
+    command: server /data --address ":9090" --console-address ":9091"
+    networks:
+      - shared-net
+
+volumes:
+  nats-data:
+    name: nats-data
+
+networks:
+  shared-net:
+    external: true
+    name: hr-shared-net

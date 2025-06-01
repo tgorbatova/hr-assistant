@@ -174,3 +174,8 @@ cython_debug/
 .pypirc
 
 .idea/
+
+docker.yaml
+local.yaml
+.python-version
+ansible/hr/

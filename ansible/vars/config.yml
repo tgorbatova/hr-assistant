@@ -1,0 +1,23 @@
+services:
+  file-storage:
+    service_path: ../../file-storage
+    compose_name: docker-compose.yml
+    port: 5000
+    location: /files
+    nginx_depends: true
+
+  resume-service:
+    service_path: ../../resume_service
+    compose_name: docker-compose.yaml
+    port: 5000
+    location: /converter
+    nginx_depends: true
+
+  front:
+    service_path: ../../front
+    compose_name: docker-compose.yml
+    port: 5000
+    location: /
+    nginx_depends: true
+
+

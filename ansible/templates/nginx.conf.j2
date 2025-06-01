@@ -1,0 +1,76 @@
+worker_processes 4;
+
+events {
+  worker_connections 1024;
+}
+
+error_log /dev/stderr error;
+
+http {
+    access_log /var/log/nginx/access.log;
+    access_log stdout;
+
+    proxy_read_timeout 300;
+    client_max_body_size 100M;
+
+    proxy_buffer_size   128k;
+    proxy_buffers   4 256k;
+    proxy_busy_buffers_size   256k;
+
+    map $request_method $cors_method {
+        OPTIONS 204;
+        default 200;
+    }
+
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+    }
+
+    add_header 'Access-Control-Allow-Origin' '$http_origin';
+    add_header 'Access-Control-Allow-Methods' '*';
+    add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+    add_header Access-Control-Allow-Credentials "true";
+
+    # upstream blocks
+{% for service in services|dict2items %}
+{% if service.value.nginx_depends %}
+    upstream {{ service.key }} {
+        server {{ service.key }}:{{ service.value.port }};
+    }
+{% endif %}
+{% endfor %}
+
+    server {
+        listen 80 default_server;
+        root /etc/nginx/html;
+
+        location ~ .*\/socket.io(\/.*|\b) {
+            proxy_pass http://front;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+        }
+
+{% for service in services|dict2items %}
+{% if service.value.nginx_depends %}
+        location {{ service.value.location }} {
+{% if service.key != 'front' %}
+            include /etc/nginx/common.d/auth.conf;
+{% endif %}
+            if ($request_method = 'OPTIONS') {
+                add_header 'Access-Control-Allow-Origin' '$http_origin';
+                add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, PATCH, DELETE';
+                add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+                add_header Access-Control-Allow-Credentials "true";
+                return 204;
+            }
+
+            proxy_pass http://{{ service.key }};
+            proxy_set_header Host $host;
+        }
+{% endif %}
+{% endfor %}
+    }
+}
+
