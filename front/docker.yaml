@@ -10,7 +10,7 @@ api:
 infra:
   client:
     files:
-      base_url: http://file-storage:5030
+      base_url: http://nginx
       domain: /files
 
   nats:

@@ -3,6 +3,7 @@ import structlog
 
 _logger: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
 
+
 class SocketManager:
     def __init__(self):
         self.sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")

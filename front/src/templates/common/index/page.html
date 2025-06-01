@@ -102,6 +102,7 @@
     <div class="header">
       <h2>My HR Assistant</h2>
       <a href="/" class="nav-button">Вакансии</a>
+      <a href="/dashboard" class="nav-button">Дашборд</a>
       <button onclick="openCreateFolderModal()" 
               class="nav-button" 
               style="margin-left: auto;">
@@ -135,7 +136,7 @@ function uploadTo(folder) {
   modal.style.justifyContent = "center";
   modal.style.zIndex = "1000";
   
-  const baseUrl = `http://localhost:5030/files?folder=${encodeURIComponent(folder)}`;
+  const baseUrl = `http://localhost/files?folder=${encodeURIComponent(folder)}`;
   
   modal.innerHTML = `
     <div style="background: var(--bg-darker); padding: 2rem; border-radius: 0.5rem; max-width: 400px; width: 90%;">
@@ -267,7 +268,7 @@ function openCreateFolderModal() {
           </svg>
         </button>
       </div>
-      <form hx-post="http://localhost:5030/files/create/folder"
+      <form hx-post="http://localhost/files/create/folder"
             hx-target="#folder-list"
             hx-swap="none"
             hx-on="submit: this.action += '?name=' + encodeURIComponent(document.getElementById('folder-name').value) + '&description=' + encodeURIComponent(document.getElementById('folder-description').value)"

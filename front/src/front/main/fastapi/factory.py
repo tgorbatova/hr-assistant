@@ -3,18 +3,17 @@ from contextlib import asynccontextmanager
 
 import structlog
 from dishka.integrations.fastapi import setup_dishka
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from nats.aio.client import Client as NatsClient
-from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
 
 from front.main.config import settings
 from front.main.di.factory import container
 from front.presentation.broker.manager import NATSManager
 from front.presentation.broker.socket import SocketManager
 from front.presentation.fastapi.router import router
+from front.presentation.fastapi.routes.results import results_router
 from front.utils.logging import StructLoggingMiddleware, setup_logging
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger("front")
@@ -67,9 +66,9 @@ def create_app() -> FastAPI:
 
     # Add CORS middleware first
     origins = [
-        "http://localhost:8001",
+        "http://localhost",
     ]
-    
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -85,7 +84,8 @@ def create_app() -> FastAPI:
 
     # Include the router first
     app.include_router(router)
-    
+    app.include_router(results_router)
+
     # Setup static files
     staticfiles = StaticFiles(directory=settings.APP.STATICFILES_DIRECTORY)
     app.mount("/static", staticfiles, name="static")

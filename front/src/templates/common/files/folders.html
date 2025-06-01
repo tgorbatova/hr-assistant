@@ -9,7 +9,7 @@
         <path d="M12 5v14M5 12h14"/>
       </svg>
     </button>
-    <button hx-delete="http://localhost:5030/files/delete/folder/{{ folder }}" 
+    <button hx-delete="http://localhost/files/delete/folder/{{ folder }}" 
             hx-target="#folder-list" 
             hx-swap="none"
             onclick="this.addEventListener('htmx:afterRequest', function(evt) { 

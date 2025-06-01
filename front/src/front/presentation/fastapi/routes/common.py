@@ -1,8 +1,6 @@
-
 import structlog
-from dishka import FromDishka
-from dishka.integrations.fastapi import DishkaRoute, inject
-from fastapi import APIRouter, WebSocket
+from dishka.integrations.fastapi import DishkaRoute
+from fastapi import APIRouter
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -22,3 +20,25 @@ async def main_page(request: Request) -> Response:
     """
     return templates.TemplateResponse("/common/index/page.html", {"request": request})
 
+
+@main_router.get("/dashboard")
+async def dashboard_page(request: Request) -> Response:
+    """Страница дашборда.
+
+    \f
+    :param request:
+    :return:
+    """
+    return templates.TemplateResponse("/common/dashboard/dashboard.html", {"request": request})
+
+
+@main_router.get("/dashboard/{folder}")
+async def dashboard_page(folder: str, request: Request) -> Response:
+    """Страница дашборда.
+
+    \f
+    :param folder:
+    :param request:
+    :return:
+    """
+    return templates.TemplateResponse("/common/dashboard/folder_dashboard.html", {"request": request, "folder": folder})

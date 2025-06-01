@@ -36,7 +36,8 @@ async def get_folder(folder: str, request: Request, repository: FromDishka[Files
     :param repository:
     :return:
     """
-    files = await repository.get_all_folder_files(folder=folder)
+    query_string = str(request.query_params)
+    files = await repository.get_folder_files_filtered(folder=folder, filters=query_string)
     return templates.TemplateResponse(
         "/common/files/folder.html", {"request": request, "folder": folder, "files": files}
     )
@@ -56,7 +57,9 @@ async def get_file(folder: str, file: str, request: Request, repository: FromDis
     """
     path = f"files/{folder}/{file}"
     file_info = await repository.get_file_info(path)
-    return templates.TemplateResponse("/common/files/file.html", {"request": request, "folder": folder, "file": file, "file_id": file_info["id"]})
+    return templates.TemplateResponse(
+        "/common/files/file.html", {"request": request, "folder": folder, "file": file, "file_id": file_info["id"]}
+    )
 
 
 @inject
