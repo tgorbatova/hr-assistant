@@ -12,14 +12,14 @@ class GetFileByIdInteractor(GetFileByIdUseCase, GetResultByIdUseCase):
         self._repository = repository
         self._streamer = file_streamer
 
-    async def get_file_by_id(self, file_id: FileId) -> AsyncIterator[bytes]:
+    async def get_file_by_id(self, file_id: FileId) -> tuple[AsyncIterator[bytes], str]:
         """Получение файла по идентификатору.
 
         :param file_id:
         :return:
         """
         file = await self._repository.get_file_by_id(file_id)
-        return await self._streamer.get_file_stream(file_name=file.metadata.path)
+        return await self._streamer.get_file_stream(file_name=file.metadata.path), file.metadata.file_name
 
     async def get_file_info_by_id(self, file_id: FileId) -> File:
         """Получение информации о файле по идентификатору.

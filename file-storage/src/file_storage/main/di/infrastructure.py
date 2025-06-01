@@ -5,6 +5,7 @@ from aiohttp import ClientSession
 from botocore.client import BaseClient
 from botocore.session import get_session
 from dishka import Provider, Scope, WithParents, from_context, provide, provide_all
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -74,3 +75,15 @@ class InfrastructureProvider(Provider):
     @provide(scope=Scope.APP)
     def s3_chunk_size(self, settings: InfraSettings) -> S3ChunkSize:
         return S3ChunkSize(settings.OBJECT_STORE.CHUNK_SIZE)
+
+    @provide
+    def mongo_client(self, settings: Settings) -> AsyncIOMotorClient:
+        return AsyncIOMotorClient(str(settings.INFRA.MONGO.DSN))
+
+    @provide
+    def database(self, client: AsyncIOMotorClient) -> AsyncIOMotorDatabase:
+        return client.get_database()
+
+    @provide
+    def collection(self, db: AsyncIOMotorDatabase) -> AsyncIOMotorCollection:
+        return db.get_collection("results")

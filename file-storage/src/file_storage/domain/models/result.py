@@ -15,6 +15,7 @@ ResultId = NewType("ResultId", uuid.UUID)
 
 class ResultType(enum.Enum):
     FORMAT = "FORMAT"
+    CONVERT = "CONVERT"
 
 
 @dataclass(slots=True)

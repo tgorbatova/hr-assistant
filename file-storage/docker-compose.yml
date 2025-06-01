@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5030:5030"
+      - "5030:5000"
     environment:
       - PYTHONPATH=/app/src
       - ENV_TYPE=docker
@@ -42,6 +42,17 @@ services:
     networks:
       - shared-net
 
+  mongo-file-storage:
+    image: mongo:latest
+    restart: always
+    command: mongod --port 27018
+    ports:
+      - "27016:27018"
+    volumes:
+      - mongo-data-file-storage:/data/db
+    networks:
+      - shared-net
+
 
 volumes:
   hr-redis-data-file-storage:
@@ -50,6 +61,8 @@ volumes:
     name: hr-redis-conf-file-storage
   pgdata-file-storage:
     name: pgdata-file-storage
+  mongo-data-file-storage:
+    name: mongo-data-file-storage
 
 networks:
   shared-net:

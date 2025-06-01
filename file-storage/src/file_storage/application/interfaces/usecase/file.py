@@ -78,7 +78,7 @@ class GetResultByIdUseCase(Protocol):
 
 class GetFileByIdUseCase(Protocol):
     @abstractmethod
-    async def get_file_by_id(self, file_id: FileId) -> AsyncIterator[bytes]:
+    async def get_file_by_id(self, file_id: FileId) -> tuple[AsyncIterator[bytes], str]:
         """Получение файла по идентификатору.
 
         :param file_id:

@@ -11,7 +11,9 @@ infra:
     secret_key: ROOTPASSWORD
   nats:
     dsn: nats://localhost:4223
+  mongo:
+    dsn: mongodb://mongo-file-storage:27018/results
 api:
   num_workers: 1
-  port: 5000
+  port: 5051
   host: 0.0.0.0

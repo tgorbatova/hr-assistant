@@ -1,4 +1,5 @@
 from typing import Annotated
+from urllib.parse import quote
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
@@ -136,7 +137,14 @@ async def get_report_file_by_id(file_id: FileId, usecase: FromDishka[GetFileById
     :return:
     """
     try:
-        return StreamingResponse(await usecase.get_file_by_id(file_id=file_id))
+        bytes, file_name = await usecase.get_file_by_id(file_id=file_id)
+        quoted_name = quote(file_name)
+        return StreamingResponse(
+            bytes,
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": f'attachment; filename="{quoted_name}"'},
+        )
+
     except FileNotFoundError as exc:
         raise DetailedHttpException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 

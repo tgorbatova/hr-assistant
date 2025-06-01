@@ -16,8 +16,10 @@ class Results(Base):
     file_id: Mapped[FileId] = mapped_column(ForeignKey("files.id", ondelete="CASCADE"), nullable=False)
     file_name: Mapped[str]
     folder_name: Mapped[str]
-    path: Mapped[str] = mapped_column(unique=True)
+    path: Mapped[str]
     size: Mapped[int]
-    type: Mapped[ResultType] = mapped_column(PgEnum(ResultType, name="result_type_enum"), nullable=False)
+    type: Mapped[ResultType] = mapped_column(
+        PgEnum(ResultType, name="result_type_enum", schema="files_schema"), nullable=False
+    )
 
     __table_args__ = (UniqueConstraint("type", "file_id", name="uq_result_type_file_id"),)

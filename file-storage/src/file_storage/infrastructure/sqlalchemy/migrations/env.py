@@ -8,8 +8,6 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from file_storage.infrastructure.sqlalchemy.base import Base
 from file_storage.infrastructure.sqlalchemy.models.files import Files
-from file_storage.infrastructure.sqlalchemy.models.folders import Folders
-from file_storage.infrastructure.sqlalchemy.models.results import Results
 from file_storage.main.config import DB_SCHEMA, settings
 
 if settings.INFRA.POSTGRES.USE_ENUM_IN_MIGRATIONS:  # pragma: no cover
@@ -30,9 +28,7 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-_autogenerate_models = (
-    Files,
-)
+_autogenerate_models = (Files,)
 
 
 def run_migrations_offline() -> None:  # pragma: no cover

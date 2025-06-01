@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Protocol
+from typing import BinaryIO, Protocol
 
 from file_storage.domain.models.file import File, FileId, Folder, FolderId, SaveFile, SaveFolder
 from file_storage.domain.models.result import Result, ResultId, ResultType, SaveResult
@@ -13,6 +13,16 @@ class FileSaver(Protocol):
     @abstractmethod
     async def save_result(self, result_info: SaveResult) -> ResultId:
         """Сохранение результата в базу данных."""
+
+    @abstractmethod
+    async def save_formatted_result(self, result_id: ResultId, file_id: FileId, result: BinaryIO) -> None:
+        """Сохранение результата в mongo БД.
+
+        :param result_id:
+        :param file_id:
+        :param result:
+        :return:
+        """
 
     @abstractmethod
     async def create_folder(self, folder_info: SaveFolder) -> FolderId:

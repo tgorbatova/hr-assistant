@@ -6,11 +6,13 @@ infra:
     database_url: postgresql+asyncpg://postgres:postgres@postgres-file-storage:5432/file_storage
     schema: files_schema
   object_store:
-    url: http://minio:9000
+    url: http://minio:9090
     access_key: ROOTNAME
     secret_key: ROOTPASSWORD
   nats:
     dsn: nats://nats:4222
+  mongo:
+    dsn: mongodb://mongo-file-storage:27018/results
 api:
   num_workers: 1
   port: 5030

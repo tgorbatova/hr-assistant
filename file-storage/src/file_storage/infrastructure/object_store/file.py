@@ -65,9 +65,12 @@ class S3ReportRepository(FileStorage):
             raise ReadFromStorageError(folder_name) from exc
         return []
 
-    async def delete_folder(self, folder_name: str) -> None:
+    async def delete_folder(self, folder_name: str, results: bool = False) -> None:
         """Delete all objects in a folder in S3-compatible storage."""
-        prefix = settings.INFRA.OBJECT_STORE.ROOT_PATH + "/" + folder_name.rstrip("/") + "/"
+        if results:
+            prefix = settings.INFRA.OBJECT_STORE.RESULT_PATH + "/" + folder_name.rstrip("/") + "/"
+        else:
+            prefix = settings.INFRA.OBJECT_STORE.ROOT_PATH + "/" + folder_name.rstrip("/") + "/"
 
         try:
             paginator = self._boto_client.get_paginator("list_objects_v2")
@@ -94,9 +97,8 @@ class S3ReportRepository(FileStorage):
 
     async def delete_file(self, folder_name: str, file_name: str) -> None:
         """Delete a file from S3-compatible storage."""
+        key = f"{settings.INFRA.OBJECT_STORE.ROOT_PATH}/{folder_name}/{file_name}"
         try:
-            key = f"{settings.INFRA.OBJECT_STORE.ROOT_PATH}/{folder_name}/{file_name}"
-
             response = self._boto_client.delete_object(Bucket=self._bucket, Key=key)
 
             deleted = response.get("DeleteMarker", False)
@@ -104,6 +106,8 @@ class S3ReportRepository(FileStorage):
                 _logger.debug("Deleted file %s", key)
             else:
                 _logger.warning("File deletion attempted, but no DeleteMarker found for %s", key)
+
+            await self.delete_folder(f"{folder_name}/{'.'.join(file_name.split('.')[:-1])}", results=True)
 
         except Exception as exc:
             await _logger.aerror("Failed to delete file: %s", key, exc=exc)
@@ -134,6 +138,8 @@ class S3ReportRepository(FileStorage):
         """
         request_url = self._boto_client.generate_presigned_url("get_object", {"Bucket": self._bucket, "Key": file_name})
 
+        _logger.debug("Trying to get file from S3 by %s", request_url)
+
         async def stream_file() -> AsyncIterator[bytes]:
             async with self._session.get(request_url) as response:
                 yield str(response.status).encode()
@@ -156,11 +162,14 @@ class S3ReportRepository(FileStorage):
         :param file_path:
         :param file_size:
         """
-        request_url = self._boto_client.generate_presigned_url("put_object", {"Bucket": self._bucket, "Key": file_path})
+        file.seek(0)
+        request_url = self._boto_client.generate_presigned_url(
+            "put_object", {"Bucket": self._bucket, "Key": file_path}, ExpiresIn=3600
+        )
 
         async with self._session.put(request_url, data=file, headers={"Content-Length": str(file_size)}) as response:
             try:
                 response.raise_for_status()
             except ClientResponseError as exc:
-                await _logger.aerror("Failed to store file. Status code %s", response.status, exc=exc)
+                _logger.error("Failed to store file. Status code %s, err=%s", response.status, str(exc))
                 raise SaveToStorageError(file_path) from exc

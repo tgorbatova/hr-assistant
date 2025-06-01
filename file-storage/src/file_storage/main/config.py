@@ -1,7 +1,7 @@
 import os
 
 import structlog
-from pydantic import BaseModel, HttpUrl, NatsDsn, PostgresDsn, SecretStr
+from pydantic import BaseModel, HttpUrl, MongoDsn, NatsDsn, PostgresDsn, SecretStr
 
 from file_storage.utils.load_yaml_config import load_yaml_config
 
@@ -32,14 +32,18 @@ class InfraSettings(BaseModel):
     class Nats(BaseModel):
         DSN: NatsDsn
 
+    class Mongo(BaseModel):
+        DSN: MongoDsn
+
     POSTGRES: Postgres
     OBJECT_STORE: S3
     NATS: Nats
+    MONGO: Mongo
 
 
 class APISettings(BaseModel):
     HOST: str = "localhost"
-    PORT: int = 5000
+    PORT: int = 5050
     NUM_WORKERS: int = 4
 
 

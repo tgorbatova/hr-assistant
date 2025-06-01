@@ -1,16 +1,24 @@
+import json
+from typing import BinaryIO
+
 import structlog
 from adaptix.conversion import get_converter
+from motor.motor_asyncio import AsyncIOMotorCollection
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from file_storage.domain.exceptions.file import DeleteFromDbError, FileNotFoundError, SaveToDbError
+from file_storage.domain.models.adaptix import retort
 from file_storage.domain.models.file import File, FileId, Folder, FolderId, SaveFile, SaveFolder
 from file_storage.domain.models.result import Result, ResultId, ResultType, SaveResult
+from file_storage.domain.mongo_filter.model import Paginated
 from file_storage.domain.repositories.file import FileReader, FileRepository
 from file_storage.infrastructure.sqlalchemy.models.files import Files
 from file_storage.infrastructure.sqlalchemy.models.folders import Folders
 from file_storage.infrastructure.sqlalchemy.models.results import Results
+from file_storage.presentation.filters.model import MongoResume
+from file_storage.presentation.filters.results import ResumeResultsFilter
 
 _logger: structlog.stdlib.BoundLogger = structlog.get_logger("files.repository")
 
@@ -53,14 +61,15 @@ def convert_result_to_domain(model: Results) -> Result:
 
 
 class FileRepositoryImpl(FileRepository):
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession, mongo_client: AsyncIOMotorCollection) -> None:
         self._session = session
+        self._mongo_client = mongo_client
 
     async def save(self, file_info: SaveFile) -> FileId:
         """Сохранение отчета в БД.
-
-        :param file_info:
-        :return:
+        save_formatted_result
+                :param file_info:
+                :return:
         """
         model = Files(
             id=file_info.id,
@@ -94,7 +103,7 @@ class FileRepositoryImpl(FileRepository):
             type=result_info.type,
             folder_name=result_info.folder_name,
             path=result_info.path,
-            size=result_info.size
+            size=result_info.size,
         )
         try:
             _logger.debug("Saving result_info %s to bd", result_info)
@@ -106,6 +115,39 @@ class FileRepositoryImpl(FileRepository):
             raise SaveToDbError from exc
 
         return model.id
+
+    async def save_formatted_result(self, result_id: ResultId, file_id: FileId, result: BinaryIO) -> None:
+        """Сохранение результата в mongo БД.
+
+        :param result_id:
+        :param file_id:
+        :param result:
+        :return:
+        """
+        try:
+            _logger.debug("Saving result_info %s to mongo bd", result_id)
+            # Читаем и декодируем содержимое из BinaryIO
+            result_data = result.read()
+            result_json = json.loads(result_data.decode("utf-8"))
+
+            # Создаём документ
+            document = {
+                "result_id": str(result_id),
+                "file_id": str(file_id),
+                "file": str(file),
+                "folder": str(folder),
+                "result": result_json,
+            }
+
+            # Сохраняем в коллекцию
+            await self._mongo_client.insert_one(document)
+        except Exception as exc:
+            _logger.error("Error saving result_info %s to mongo bd: %s", result_id, str(exc))
+
+    async def get_filtered(self, filters: ResumeResultsFilter) -> Paginated[MongoResume]:
+        data = await filters.execute(self._mongo_client, loader=retort.load)
+
+        return data
 
     async def create_folder(self, folder_info: SaveFolder) -> FolderId:
         """Сохранение папки в бд.
@@ -190,7 +232,7 @@ class FileReadRepository(FileReader):
         :param type:
         """
         _logger.debug("Getting result by file id %s", file_id)
-        query = select(Results).where(Results.file_id == file_id, Results.type == type.value)
+        query = select(Results).where(Results.file_id == file_id, Results.type == type)
         async with self._session_maker() as session:
             result = await session.execute(query)
             if model := result.unique().scalar_one_or_none():

@@ -67,10 +67,9 @@ def create_fastapi_app() -> FastAPI:
     :return:
     """
     app = FastAPI(
-        title="Mediatools Fluger Reports API",
-        description="Сервис для работы с отчетами Media Fluger.",
+        title="HR Assistant File Storage Service",
+        description="Сервис для работы с вакансиями и резюме.",
         version="1.0.0",
-        root_path="/reports/api/v1",
         default_response_class=ORJSONResponse,
         middleware=[
             Middleware(
@@ -104,7 +103,7 @@ def create_fastapi_app() -> FastAPI:
                 structlog.processors.CallsiteParameter.PROCESS,
             }),
         ],
-        unwanted_loggers=["python_multipart.multipart", "botocore"],
+        unwanted_loggers=["python_multipart.multipart", "botocore", "pymongo"],
         log_level=settings.LOGGING.LEVEL,
     )
 
