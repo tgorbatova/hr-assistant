@@ -21,7 +21,7 @@ from file_storage.utils.logging import logger
 results_router = NatsRouter()
 
 
-@results_router.subscriber("inference.converted", stream=stream)
+@results_router.subscriber("inference.converted", stream=stream, queue="file-storage-converted")
 @results_router.publisher("inference.converted.saved", stream=stream)
 async def save_converted_result(
     msg: ConvertedMsgSchema, usecase: FromDishka[SaveResultUseCase], file_usecase: FromDishka[GetFileByIdUseCase]
@@ -58,7 +58,7 @@ async def save_converted_result(
         raise DetailedHttpException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
 
-@results_router.subscriber("inference.formatted", stream=stream)
+@results_router.subscriber("inference.formatted", stream=stream, queue="file-storage-formatted")
 @results_router.publisher("inference.formatted.saved", stream=stream)
 async def save_formatted_result(
     msg: FormattedMsgSchema, usecase: FromDishka[SaveResultUseCase], file_usecase: FromDishka[GetFileByIdUseCase]

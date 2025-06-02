@@ -49,7 +49,6 @@ class SaveResultInteractor(SaveResultUseCase):
                 result_id,
                 save_result.file_id,
                 result,
-                result_info.file_name,
             )
 
         await self._storage.store_file(result, _format_path(result_info), file_size=save_result.size)

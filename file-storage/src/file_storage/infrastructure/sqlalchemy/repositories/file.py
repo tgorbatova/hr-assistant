@@ -134,8 +134,6 @@ class FileRepositoryImpl(FileRepository):
             document = {
                 "result_id": str(result_id),
                 "file_id": str(file_id),
-                "file": str(file),
-                "folder": str(folder),
                 "result": result_json,
             }
 

@@ -6,4 +6,5 @@ stream = JStream(
     retention=RetentionPolicy.LIMITS,
     subjects=["inference.upload", "inference.converted", "inference.formatted"],
     sources=[StreamSource(name="INFERENCE")],
+    declare=False
 )
