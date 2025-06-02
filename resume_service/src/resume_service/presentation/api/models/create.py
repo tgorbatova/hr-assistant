@@ -14,3 +14,18 @@ class CreateTaskQuery(BaseModel):
             description="Идентификатор файла.",
         ),
     ]
+
+
+class ChatQuery(BaseModel):
+    question: Annotated[
+        str,
+        Query(
+            description="Вопрос",
+        ),
+    ]
+    resume: Annotated[
+        dict,
+        Query(
+            description="Резюме",
+        ),
+    ]

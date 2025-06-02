@@ -65,8 +65,6 @@ def create_app() -> FastAPI:
             Exception: exception_handler,
             ExceptionGroup: exception_handler,
         },
-        root_path="/resume-converter/api/v1",
-        docs_url="/api/docs",
         lifespan=lifespan,
     )
     app.include_router(router)

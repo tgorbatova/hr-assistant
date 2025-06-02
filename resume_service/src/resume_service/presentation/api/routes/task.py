@@ -5,10 +5,12 @@ from typing import Annotated
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Body, HTTPException, Query, UploadFile, status
+from fastapi.responses import StreamingResponse
 
+from resume_service.infrastructure.adapters.llm import LLMAdapter
 from resume_service.infrastructure.adapters.task import TaskAdapter
-from resume_service.presentation.api.models.create import CreateTaskQuery
+from resume_service.presentation.api.models.create import ChatQuery, CreateTaskQuery
 
 router = APIRouter(prefix="/converter", tags=["converter"])
 
@@ -69,3 +71,10 @@ async def get_task_status(task_id: str, task_service: FromDishka[TaskAdapter]):
 async def delete_task(task_id: str, task_service: FromDishka[TaskAdapter]) -> None:
     """Отмена задачи."""
     await task_service.abort_task(task_id=uuid.UUID(task_id))
+
+
+@router.post("/chat", status_code=status.HTTP_202_ACCEPTED)
+@inject
+async def ask(repository: FromDishka[LLMAdapter], queries: Annotated[ChatQuery, Body(...)]) -> StreamingResponse:
+    """Создание задачи на чат."""
+    return await repository.answer(queries.question, queries.resume)

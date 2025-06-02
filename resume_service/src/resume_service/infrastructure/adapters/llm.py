@@ -1,5 +1,7 @@
+import asyncio
 import json
 
+from fastapi.responses import StreamingResponse
 from openai import AsyncOpenAI
 
 from resume_service.domain.exceptions.format import ResumeParsingError
@@ -40,3 +42,21 @@ class LLMAdapter:
             raise ResumeParsingError
 
         return ResumeInfo(**data)
+
+    async def answer(self, question: str, resume: dict) -> StreamingResponse:
+        async def event_stream():
+            response = await self._client.chat.completions.create(
+                model="Qwen/Qwen2.5-14B-Instruct",
+                messages=[{"role": "user", "content": f"Дано резюме: {resume}\n{question}"}],
+                max_tokens=2000,
+                stream=True,
+            )
+            async for chunk in response:
+                print("CHUNK:", chunk)
+                delta = chunk.choices[0].delta.content
+                print("DELTA", delta)
+                if delta:
+                    yield delta
+            await asyncio.sleep(0)  # Yield control
+
+        return StreamingResponse(event_stream(), media_type="text/plain")
