@@ -5,6 +5,7 @@
   <title>HR System</title>
   <script src="https://unpkg.com/htmx.org@1.9.2"></script>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
       --bg-dark: #1a1a1a;
@@ -249,6 +250,216 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    .assistant-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 30px;
+      background: var(--accent-color);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .assistant-button:hover {
+      transform: scale(1.05);
+    }
+
+    .chat-window {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 400px;
+      height: 600px;
+      background: var(--bg-darker);
+      border-radius: 12px;
+      box-shadow: 0 6px 32px rgba(0, 0, 0, 0.4),
+                  0 0 0 1px rgba(255, 255, 255, 0.1),
+                  0 0 0 4px rgba(0, 0, 0, 0.3);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .chat-window.active {
+      display: flex;
+      animation: chatWindowAppear 0.3s ease;
+    }
+
+    @keyframes chatWindowAppear {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .chat-input-container {
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      gap: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text-primary);
+      font-size: 14px;
+      resize: none;
+      min-height: 50px;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .send-button {
+      padding: 12px 20px;
+      background: var(--accent-color);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      align-self: flex-end;
+      height: fit-content;
+    }
+
+    .send-button:hover {
+      opacity: 0.9;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      line-height: 1.5;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .message.sent {
+      margin-left: auto;
+      background: var(--accent-color);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.received {
+      margin-right: auto;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+      backdrop-filter: blur(4px);
+    }
+
+    .message.received p {
+      margin: 0 0 10px 0;
+    }
+
+    .message.received p:last-child {
+      margin-bottom: 0;
+    }
+
+    .message.received ul, 
+    .message.received ol {
+      margin: 0 0 10px 0;
+      padding-left: 20px;
+    }
+
+    .message.received code {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    .message.received pre {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 10px 0;
+    }
+
+    .message.received pre code {
+      background: none;
+      padding: 0;
+    }
+
+    .message.received strong {
+      font-weight: 600;
+    }
+
+    .message.received em {
+      font-style: italic;
+    }
+
+    .message.received blockquote {
+      border-left: 3px solid var(--accent-color);
+      margin: 0 0 10px 0;
+      padding-left: 10px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    #chatMessages {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      scroll-behavior: smooth;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    /* Add loading dots animation */
+    @keyframes loadingDots {
+      0%, 20% {
+        content: ".";
+      }
+      40% {
+        content: "..";
+      }
+      60%, 100% {
+        content: "...";
+      }
+    }
+
+    .loading-dots {
+      display: inline-block;
+    }
+
+    .loading-dots::after {
+      content: "...";
+      animation: loadingDots 1.5s infinite;
+      opacity: 0.7;
+    }
+
+    .message.thinking {
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.7);
+      font-style: italic;
+    }
   </style>
 </head>
 <body style="color: var(--text-secondary);">
@@ -321,14 +532,22 @@
       </div>
 
       <script>
+        let resumeData = null;  // Global variable to store resume data
+
         document.querySelector('.description-content').addEventListener('htmx:afterRequest', function(evt) {
           if (evt.detail.successful) {
             const response = evt.detail.xhr.response;
             console.log('HTMX Response:', response);
             if (response) {
-              const resume = JSON.parse(response);
-              console.log('Parsed HTMX resume:', resume);
-              this.innerHTML = formatResume(resume);
+              try {
+                const resume = JSON.parse(response);
+                console.log('Parsed HTMX resume:', resume);
+                resumeData = resume;  // Store the resume data
+                this.innerHTML = formatResume(resume);  // Use our formatting function
+              } catch (e) {
+                console.error('Failed to parse resume data:', e);
+                this.innerHTML = response; // Fallback to raw response if parsing fails
+              }
             }
           }
         });
@@ -397,7 +616,11 @@
           <!-- Left Column -->
           <div style="display: flex; flex-direction: column; gap: 0.5rem;">
             <!-- Name -->
-            <h1 style="${headingStyle}; font-size: 2.5rem; font-weight: 600; margin: 0;">${resume.name}</h1>
+            <h1 style="${headingStyle}; 
+                       font-size: 2.5rem; 
+                       font-weight: 600; 
+                       margin: 0; 
+                       color: rgba(255, 255, 255, 0.87);">${resume.name}</h1>
 
             <!-- Personal Info -->
             <div style="display: flex; flex-direction: column; gap: 0.25rem;">
@@ -407,19 +630,28 @@
               ${resume.contact_info.phone?.map(phone => `<div style="display: grid; grid-template-columns: 20px 1fr; gap: 0.25rem; align-items: center;"><svg width="16" height="16" fill="currentColor" class="bi bi-telephone" viewBox="0 0 16 16"><path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.568 17.568 0 0 0 4.168 6.608 17.569 17.569 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.678.678 0 0 0-.58-.122l-2.19.547a1.745 1.745 0 0 1-1.657-.459L5.482 8.062a1.745 1.745 0 0 1-.46-1.657l.548-2.19a.678.678 0 0 0-.122-.58L3.654 1.328zM1.884.511a1.745 1.745 0 0 1 2.612.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"/></svg><h3 style="${headingStyle}; font-size: 1.2rem; font-weight: 400; margin: 0;">${phone}</h3></div>`).join('')}
             </div>
 
+            <!-- Divider before Skills -->
+            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 1rem 0;"></div>
+
             <!-- Skills Section -->
             ${hasContent(resume.skills) ? `
               <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                   ${resume.skills.map(skill => 
-                    `<span style="background: rgba(255,255,255,0.1); padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 1.1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.05);">${skill}</span>`
+                    `<span style="background: rgba(255,255,255,0.1); 
+                                 padding: 0.375rem 0.75rem; 
+                                 border-radius: 0.375rem; 
+                                 font-size: 0.95rem;">${skill}</span>`
                   ).join('')}
                 </div>
                 ${hasContent(resume.languages) ? `
                   <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 0.5rem 0;"></div>
                   <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                     ${resume.languages.map(lang => 
-                      `<span style="background: rgba(255,255,255,0.1); padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-size: 0.95rem;">${lang}</span>`
+                      `<span style="background: rgba(255,255,255,0.1); 
+                                   padding: 0.375rem 0.75rem; 
+                                   border-radius: 0.375rem; 
+                                   font-size: 0.95rem;">${lang}</span>`
                     ).join('')}
                   </div>
                 ` : ''}
@@ -435,16 +667,13 @@
             <!-- Right Side Column (Education and Additional Info) -->
             <div style="display: flex; flex-direction: column; gap: 0.25rem;">
               <!-- Education Section -->
-              ${hasContent(resume.education) ? `<div style="display: flex; flex-direction: column;"><div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.5rem;" onclick="toggleSection('education')"><h3 style="${headingStyle}; font-size: 1.5rem; font-weight: 600; margin: 0; color: rgba(255, 255, 255, 0.87);">Образование</h3><svg width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16" id="education-icon" style="transition: transform 0.2s;"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg></div><div id="education-content" style="display: block; background: rgba(0,0,0,0.2); border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 1rem;">${resume.education.map((edu, index) => `<div style="display: flex; flex-direction: column; margin-bottom: 0.75rem;"><h4 style="${headingStyle}; font-size: 1.1rem; font-weight: 500; margin: 0 0 0.25rem 0;">${[edu.degree, edu.major].filter(Boolean).join(' • ')}</h4><div style="display: flex; gap: 0.5rem; align-items: center; opacity: 0.8;"><h5 style="${headingStyle}; font-size: 0.95rem; font-weight: 400; margin: 0;">${edu.institution}</h5>${edu.location ? `<span style="font-size: 0.95rem;">•</span><h5 style="${headingStyle}; font-size: 0.95rem; font-weight: 400; margin: 0;">${edu.location}</h5>` : ''}<span style="font-size: 0.95rem;">•</span><h5 style="${headingStyle}; font-size: 0.95rem; font-weight: 400; margin: 0;">${edu.period}</h5></div></div>${index < resume.education.length - 1 ? `<div style="height: 1px; background: rgba(255,255,255,0.1); margin: 1rem 0;"></div>` : ''}`).join('')}</div></div>` : ''}
+              ${hasContent(resume.education) ? `<div style="display: flex; flex-direction: column;"><div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.5rem;" onclick="toggleSection('education')"><h3 style="${headingStyle}; font-size: 1.5rem; font-weight: 600; margin: 0; color: rgba(255, 255, 255, 0.87);">Образование</h3><svg width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16" id="education-icon" style="transition: transform 0.2s;"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg></div><div id="education-content" style="display: block; background: rgba(0,0,0,0.2); border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 1rem;">${resume.education.map((edu, index) => `<div style="display: flex; flex-direction: column; margin-bottom: 0.75rem;"><div style="display: flex; flex-direction: column; gap: 0.25rem;">${edu.degree ? `<h4 style="${headingStyle}; font-size: 1.1rem; font-weight: 500; margin: 0;">${edu.degree}</h4>` : ''}${edu.major ? `<h4 style="${headingStyle}; font-size: 1.1rem; font-weight: 500; margin: 0;">${edu.major}</h4>` : ''}</div><div style="display: flex; flex-direction: column; gap: 0.25rem; opacity: 0.8; margin-top: 0.25rem;">${edu.institution ? `<h5 style="${headingStyle}; font-size: 0.95rem; font-weight: 400; margin: 0;">${edu.institution}</h5>` : ''}${edu.location ? `<h5 style="${headingStyle}; font-size: 0.95rem; font-weight: 400; margin: 0;">${edu.location}</h5>` : ''}${edu.period ? `<h5 style="${headingStyle}; font-size: 0.95rem; font-weight: 400; margin: 0;">${edu.period}</h5>` : ''}</div></div>${index < resume.education.length - 1 ? `<div style="height: 1px; background: rgba(255,255,255,0.1); margin: 1rem 0;"></div>` : ''}`).join('')}</div></div>` : ''}
 
               <!-- Courses Section -->
               ${hasContent(resume.courses) ? `<div style="display: flex; flex-direction: column;"><div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.5rem;" onclick="toggleSection('courses')"><h3 style="${headingStyle}; font-size: 1.5rem; font-weight: 600; margin: 0; color: rgba(255, 255, 255, 0.87);">Курсы</h3><svg width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16" id="courses-icon" style="transition: transform 0.2s;"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg></div><div id="courses-content" style="display: block; background: rgba(0,0,0,0.2); border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 1rem;"><ul style="margin: 0; padding-left: 1.5rem;">${resume.courses.map(course => `<li style="font-size: 0.95rem; margin: 0 0 0.25rem 0;">${course}</li>`).join('')}</ul></div></div>` : ''}
 
-              <!-- Languages Section -->
-              ${hasContent(resume.languages) ? `<div style="display: flex; flex-direction: column;"><div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.5rem;" onclick="toggleSection('languages')"><h3 style="${headingStyle}; font-size: 1.5rem; font-weight: 600; margin: 0; color: rgba(255, 255, 255, 0.87);">Языки</h3><svg width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16" id="languages-icon" style="transition: transform 0.2s;"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg></div><div id="languages-content" style="display: block; background: rgba(0,0,0,0.2); border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 1rem;"><div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">${resume.languages.map(lang => `<span style="background: rgba(255,255,255,0.1); padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-size: 0.95rem;">${lang}</span>`).join('')}</div></div></div>` : ''}
-
               <!-- Additional Information -->
-              ${hasContent(resume.other) ? `<div style="display: flex; flex-direction: column;"><div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.5rem;" onclick="toggleSection('other')"><h3 style="${headingStyle}; font-size: 1.5rem; font-weight: 600; margin: 0; color: rgba(255, 255, 255, 0.87);">Навыки</h3><svg width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16" id="other-icon" style="transition: transform 0.2s;"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg></div><div id="other-content" style="display: block; background: rgba(0,0,0,0.2); border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 1rem;">${Object.entries(resume.other).map(([key, value]) => `<h4 style="${headingStyle}; font-size: 0.95rem; font-weight: 400; margin: 0 0 0.25rem 0;"><strong>${key}:</strong> ${Array.isArray(value) ? value.join(', ') : value}</h4>`).join('')}</div></div>` : ''}
+              ${hasContent(resume.other) ? `<div style="display: flex; flex-direction: column;"><div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.5rem;" onclick="toggleSection('other')"><h3 style="${headingStyle}; font-size: 1.5rem; font-weight: 600; margin: 0; color: rgba(255, 255, 255, 0.87);">Дополнительная информация</h3><svg width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16" id="other-icon" style="transition: transform 0.2s;"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg></div><div id="other-content" style="display: block; background: rgba(0,0,0,0.2); border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 1rem;">${Object.entries(resume.other).map(([key, value]) => `<div style="margin-bottom: 1rem;"><h4 style="${headingStyle}; font-size: 1.1rem; font-weight: 500; margin: 0 0 0.5rem 0;">${key}</h4>${Array.isArray(value) ? `<ul style="margin: 0; padding-left: 1.5rem;">${value.map(item => `<li style="margin-bottom: 0.5rem;">${typeof item === 'object' ? Object.values(item).join('<br>') : item}</li>`).join('')}</ul>` : `<div>${value}</div>`}</div>`).join('')}</div></div>` : ''}
             </div>
           </div>
         </div>
@@ -565,6 +794,161 @@
         icon.style.transform = 'rotate(-90deg)';
       }
     }
+
+    function toggleChat() {
+      const chatWindow = document.getElementById('chatWindow');
+      chatWindow.classList.toggle('active');
+      if (chatWindow.classList.contains('active')) {
+        document.getElementById('chatInput').focus();
+      }
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      
+      if (message) {
+        console.log('Message to send:', message);
+        
+        // Add user message to chat
+        const messagesContainer = document.getElementById('chatMessages');
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message sent';
+        messageElement.textContent = message;
+        messagesContainer.appendChild(messageElement);
+        
+        // Create thinking message
+        const thinkingElement = document.createElement('div');
+        thinkingElement.className = 'message received thinking';
+        thinkingElement.innerHTML = 'Думаю<span class="loading-dots"></span>';
+        messagesContainer.appendChild(thinkingElement);
+        
+        // Clear input and scroll
+        input.value = '';
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        try {
+          console.log('Sending resume data:', resumeData);
+          
+          const response = await fetch('http://localhost/converter/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              resume: resumeData,
+              question: message
+            })
+          });
+
+          // Remove thinking message once we get a response
+          thinkingElement.remove();
+
+          // Create response message container
+          const responseElement = document.createElement('div');
+          responseElement.className = 'message received';
+          responseElement.innerHTML = '';
+          messagesContainer.appendChild(responseElement);
+
+          console.log('Response status:', response.status);
+          console.log('Response status text:', response.statusText);
+          console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+          }
+
+          // Handle streaming response
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let chunkCount = 0;
+
+          // Configure marked options
+          marked.setOptions({
+            breaks: true,
+            gfm: true,
+            sanitize: true
+          });
+
+          const typeCharacter = async (text) => {
+            buffer += text;
+            responseElement.innerHTML = marked.parse(buffer);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            await new Promise(resolve => setTimeout(resolve, 10));
+          };
+
+          while (true) {
+            const { value, done } = await reader.read();
+            console.log('Stream chunk received:', { done, valueLength: value?.length });
+            
+            if (done) {
+              console.log('Stream complete. Total chunks:', chunkCount);
+              break;
+            }
+            
+            const chunk = decoder.decode(value, { stream: true });
+            console.log('Decoded chunk:', chunk);
+            
+            chunkCount++;
+            
+            for (let char of chunk) {
+              await typeCharacter(char);
+            }
+          }
+
+          const finalChunk = decoder.decode();
+          if (finalChunk) {
+            console.log('Final chunk:', finalChunk);
+            for (let char of finalChunk) {
+              await typeCharacter(char);
+            }
+          }
+
+          console.log('Final complete response:', responseElement.innerHTML);
+
+        } catch (error) {
+          console.error('Error:', error);
+          // Remove thinking message if there's an error
+          thinkingElement.remove();
+          
+          const responseElement = document.createElement('div');
+          responseElement.className = 'message received';
+          responseElement.textContent = 'Sorry, an error occurred while processing your request.';
+          messagesContainer.appendChild(responseElement);
+        }
+      }
+    }
   </script>
+
+  <button class="assistant-button" onclick="toggleChat()">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+    </svg>
+  </button>
+
+  <div class="chat-window" id="chatWindow">
+    <div style="flex: 1; padding: 16px; overflow-y: auto;" id="chatMessages">
+      <!-- Messages will appear here -->
+    </div>
+    <div class="chat-input-container">
+      <textarea 
+        class="chat-input" 
+        id="chatInput" 
+        placeholder="Задайте вопрос..."
+        rows="1"
+        onkeydown="handleKeyPress(event)"></textarea>
+      <button class="send-button" onclick="sendMessage()">Отправить</button>
+    </div>
+  </div>
 </body>
 </html>
